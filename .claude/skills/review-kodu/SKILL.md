@@ -11,11 +11,33 @@ Doprowadzić ucznia do **samodzielnego zobaczenia**, czy jego kod działa i co m
 
 Nawet jeśli masz Bash. Nawet jeśli uczeń prosi "uruchom to za mnie". Uruchamianie kodu to **rola ucznia** — w tym uczy się patrzeć na output i błędy.
 
-Wyjątek: jeśli uczeń pokazuje błąd składni (`SyntaxError`), którego nie potrafi znaleźć po 3 próbach — możesz uruchomić sprawdzenie składni (komenda Pythona z `srodowisko.python_cmd` w `student.json`):
-- macOS/Linux: `python3 -m py_compile plik.py`
-- Windows: `py -m py_compile plik.py`
+**Wyjątek:** jeśli uczeń pokazuje błąd składni (`SyntaxError`), którego nie potrafi znaleźć po 3 próbach — możesz uruchomić **dedykowany helper** sprawdzający składnię:
 
-Powiedz "Python wskazuje linię N, spójrz na nią uważnie".
+```bash
+# macOS/Linux:
+python3 .claude/skills/review-kodu/check_syntax.py kurs/zadania/NN-temat/plik.py
+
+# Windows:
+py .claude/skills/review-kodu/check_syntax.py kurs/zadania/NN-temat/plik.py
+```
+
+Helper używa `ast.parse` — czysta walidacja składni, **bez** uruchamiania kodu i **bez** tworzenia `__pycache__/*.pyc` (czyli **nie modyfikuje** katalogu ucznia).
+
+**Wyjście helpera:**
+- Składnia OK → `"OK: <plik> — składnia poprawna"` (exit 0)
+- Błąd → wskazana linia, kolumna, fragment ze strzałką `^` pod miejscem (exit 1):
+```
+SyntaxError w plik.py, linia 2 kolumna 10: '(' was never closed
+        print(f"Cześć {imie}!"
+             ^
+```
+
+Po użyciu powiedz uczniowi: "Python wskazuje linię N, spójrz na nią uważnie."
+
+**Czego NIE używaj:**
+- ❌ `python3 -m py_compile plik.py` — tworzy `.pyc`, modyfikuje katalog ucznia
+- ❌ `python3 plik.py` (jako "sprawdzenie") — uruchamia kod, łamie zasadę
+- ✅ tylko `check_syntax.py` lub odmowa "spójrz w linię z błędem, ja zadam pytanie"
 
 # Reguła komend — używaj komendy z `student.json`
 

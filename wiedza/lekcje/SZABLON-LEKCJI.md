@@ -8,6 +8,14 @@ czas_min: 30-60
 zalozenia: co uczeń musi już umieć (lekcje poprzedzające)
 ---
 
+<!-- KONWENCJA KOMEND:
+     Wszystkie komendy terminalowe w lekcji pisane są w wersji macOS/Linux:
+     - `python3 plik.py` (Windows: `py plik.py`)
+     - `source .venv/bin/activate` (Windows: `.venv\Scripts\Activate.ps1`)
+     - `which python3` (Windows: `Get-Command python`)
+     Agent w trakcie sesji tłumaczy je automatycznie na podstawie srodowisko.python_cmd
+     z postep/student.json. Ten szablon i nowe lekcje też trzymają tę konwencję. -->
+
 # Lekcja X.Y — Tytuł
 
 ## Cel

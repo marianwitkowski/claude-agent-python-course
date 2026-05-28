@@ -80,7 +80,9 @@ def today() -> str:
 
 
 def ts() -> str:
-    return datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    # Mikrosekundy zapewniają unikalność backupów nawet przy szybkich sekwencjach
+    # (np. add-lekcja + set + end-session w jednej sekundzie).
+    return datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
 
 
 def read_state() -> dict:
@@ -206,6 +208,18 @@ def cmd_add_lekcja(args):
     state = migrate(read_state())
     if not (1 <= args.trudnosc <= 5):
         raise SystemExit("BŁĄD: trudnosc musi być 1-5")
+
+    # Upsert po id — chroni przed duplikatami przy retry/timeout.
+    # Jeśli uczeń powtarza lekcję, trudność subiektywna może się zmienić — bierzemy najświeższą.
+    for entry in state["ukonczone_lekcje"]:
+        if entry.get("id") == args.id:
+            entry["data"] = today()
+            entry["trudnosc_subiektywna"] = args.trudnosc
+            state["ostatnia_sesja"] = today()
+            save(state)
+            print(f"OK: zaktualizowano lekcję {args.id} (trudność {args.trudnosc})")
+            return
+
     state["ukonczone_lekcje"].append({
         "id": args.id,
         "data": today(),
@@ -218,6 +232,15 @@ def cmd_add_lekcja(args):
 
 def cmd_add_cwiczenie(args):
     state = migrate(read_state())
+
+    # Upsert po (lekcja, poziom) — idempotentny przy retry.
+    for entry in state["ukonczone_cwiczenia"]:
+        if entry.get("lekcja") == args.lekcja and entry.get("poziom") == args.poziom:
+            entry["data"] = today()
+            save(state)
+            print(f"OK: zaktualizowano ćwiczenie {args.lekcja}/{args.poziom}")
+            return
+
     state["ukonczone_cwiczenia"].append({
         "lekcja": args.lekcja,
         "poziom": args.poziom,

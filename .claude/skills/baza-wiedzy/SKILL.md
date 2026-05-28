@@ -139,28 +139,56 @@ Pokaż również:
 
 Inna odpowiedź → STOP, `rm -rf ${TMP}`, koniec.
 
-### Krok 7: zbuduj `wiedza/zrodlo.new/` (równolegle do obecnego)
+### Kroki 7-9: ATOMOWY blok build + swap z automatycznym rollback
 
-**Kluczowe:** nie modyfikujemy `wiedza/zrodlo/` dopóki nowa wersja nie jest gotowa i zwalidowana. Wszystko buduje się obok.
+**Kluczowe:** Wszystkie operacje modyfikujące `wiedza/zrodlo/` muszą iść w **jednym bloku bash** z `set -e; trap rollback ERR`. To gwarantuje, że jeśli cokolwiek padnie (mv, kopiowanie, walidacja, sieć) — rollback wykona się automatycznie, bez zależności od tego, czy agent zdąży zareagować.
+
+Wykonaj jako **pojedynczy** `bash -c "..."` lub w jednym wywołaniu shell:
 
 ```bash
+set -e
 TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
 NEW_DIR="wiedza/zrodlo.new"
+BACKUP="wiedza/zrodlo.backup-${TIMESTAMP}"
 
-# Jeśli zrodlo.new już istnieje (z poprzedniej nieudanej próby) — przenieś, NIE usuwaj
+# Funkcja rollback wywoływana automatycznie przy każdym błędzie
+rollback() {
+  local exit_code=$?
+  echo ""
+  echo "==================== BŁĄD — wykonuję automatyczny rollback ===================="
+
+  # Sytuacja 1: backup utworzony, ale zrodlo nie ma na miejsce (padło między mv-A i mv-B)
+  if [ ! -d wiedza/zrodlo ] && [ -d "$BACKUP" ]; then
+    mv "$BACKUP" wiedza/zrodlo
+    echo "ROLLBACK A: przywrócono wiedza/zrodlo z backupu"
+  fi
+
+  # Sytuacja 2: zrodlo.new istnieje (nieudany build) — przenieś do failed
+  if [ -d "$NEW_DIR" ]; then
+    mv "$NEW_DIR" "${NEW_DIR}.failed-${TIMESTAMP}"
+    echo "ROLLBACK B: nieudany zrodlo.new przeniesiony do ${NEW_DIR}.failed-${TIMESTAMP}"
+  fi
+
+  echo "Stan po rollback:"
+  ls -d wiedza/zrodlo* 2>/dev/null || echo "  (brak wiedza/zrodlo*)"
+  echo "================================================================================"
+  exit $exit_code
+}
+trap rollback ERR
+
+# --- Krok 7: build zrodlo.new równolegle ---
+
+# Jeśli stary zrodlo.new pozostał z poprzedniej awarii — zarchiwizuj (NIE kasuj)
 if [ -d "$NEW_DIR" ]; then
-  mv "$NEW_DIR" "${NEW_DIR}.failed-${TIMESTAMP}"
-  echo "INFO: stary zrodlo.new przeniesiony do ${NEW_DIR}.failed-${TIMESTAMP}"
+  mv "$NEW_DIR" "${NEW_DIR}.stale-${TIMESTAMP}"
+  echo "INFO: stary zrodlo.new przeniesiony do ${NEW_DIR}.stale-${TIMESTAMP}"
 fi
 
 mkdir -p "$NEW_DIR"
 cp "${TMP}"/*.md "$NEW_DIR"/
-```
 
-### Krok 8: zapisz VERSION.json + walidacja `zrodlo.new/`
+# --- Krok 8: VERSION.json + walidacja ---
 
-```bash
-# Zapisz VERSION.json w nowym katalogu
 python3 -c "
 import json
 from datetime import datetime, timezone
@@ -175,64 +203,49 @@ with open('${NEW_DIR}/VERSION.json', 'w', encoding='utf-8') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
 "
 
-# Walidacja nowego katalogu PRZED swapem
-FILES_COUNT=$(ls "$NEW_DIR"/*.md 2>/dev/null | wc -l)
-if [ "$FILES_COUNT" -ne 13 ]; then
-  echo "BŁĄD: oczekiwane 13 plików .md, znalezione: $FILES_COUNT"
-  mv "$NEW_DIR" "${NEW_DIR}.failed-${TIMESTAMP}"
-  echo "Nieudana wersja: ${NEW_DIR}.failed-${TIMESTAMP} (NIE USUNIĘTA — sprawdź ręcznie)"
-  exit 1
-fi
+# Walidacja: dokładnie 13 plików .md w zrodlo.new (rzuca błąd → trap → rollback)
+FILES_COUNT=$(ls "$NEW_DIR"/*.md 2>/dev/null | wc -l | tr -d ' ')
+[ "$FILES_COUNT" = "13" ] || { echo "BŁĄD walidacji: oczekiwane 13 plików, znalezione $FILES_COUNT"; exit 1; }
 
-python3 -c "import json; json.load(open('${NEW_DIR}/VERSION.json'))" || {
-  echo "BŁĄD: VERSION.json nie parsuje się jako JSON"
-  mv "$NEW_DIR" "${NEW_DIR}.failed-${TIMESTAMP}"
-  exit 1
-}
-```
+# Walidacja: VERSION.json parsuje się
+python3 -c "import json; json.load(open('${NEW_DIR}/VERSION.json'))"
 
-### Krok 9: atomowy swap przez `mv` (bez `rm -rf`)
+# --- Krok 9: atomowy swap przez 2x mv ---
+# Każdy mv jest atomowy w POSIX. Jeśli drugi mv padnie, trap rollback przywróci backup.
 
-To gwarantuje, że jeśli zdalne repo **USUNĘŁO** plik, lokalny mirror też go straci (poprawny mirror). Stary katalog idzie do backupu jako CAŁOŚĆ — nie kasujemy poszczególnych plików.
-
-```bash
-BACKUP="wiedza/zrodlo.backup-${TIMESTAMP}"
-
-# Atomowy swap przez 2x mv (każdy mv jest atomowy w POSIX):
-# Krok A: stary zrodlo → backup
 if [ -d wiedza/zrodlo ]; then
-  mv wiedza/zrodlo "$BACKUP"
+  mv wiedza/zrodlo "$BACKUP"      # mv-A: jeśli padnie tu, nie zostawiamy uszkodzeń
 fi
+mv "$NEW_DIR" wiedza/zrodlo         # mv-B: jeśli padnie tu, trap wykryje brak zrodlo + obecność backup
 
-# Krok B: nowy zrodlo.new → zrodlo
-mv "$NEW_DIR" wiedza/zrodlo
-
-echo "OK: zaktualizowano do ${SHA:0:7}"
+# --- Sukces — wyłącz trap i powiadom ---
+trap - ERR
+echo "OK: zaktualizowano wiedza/zrodlo/ do SHA ${SHA:0:7}"
 echo "Backup poprzedniej wersji: ${BACKUP}"
 echo "(Backup zostaje. Aby zarchiwizować po sprawdzeniu: mv ${BACKUP} wiedza/_old/)"
 ```
 
-**Awaryjny rollback** (jeśli między Krokiem A i B coś padnie):
-```bash
-# Gdy backup istnieje, ale zrodlo nie:
-if [ ! -d wiedza/zrodlo ] && [ -d "$BACKUP" ]; then
-  mv "$BACKUP" wiedza/zrodlo
-  echo "ROLLBACK: przywrócono z backupu"
-fi
-```
+**Co się stanie w różnych scenariuszach awarii:**
 
-Agent powinien wykonać tę kontrolę zaraz po Kroku 9.
+| Co padło                                | Co robi `trap rollback`                                |
+| --------------------------------------- | ------------------------------------------------------ |
+| `cp` plików z `/tmp` do `zrodlo.new`    | `zrodlo` nietknięty, `zrodlo.new` → `failed-<TS>`     |
+| Walidacja (FILES_COUNT ≠ 13)            | jw.                                                    |
+| `python3 -c` zapisujący VERSION.json    | jw.                                                    |
+| mv-A (`zrodlo → backup`)                | rzadkie, `mv` rzadko pada; backup nie istnieje → trap zostawia `zrodlo` nietknięty + `zrodlo.new` → failed |
+| mv-B (`zrodlo.new → zrodlo`)            | `zrodlo` nie istnieje, backup istnieje → trap robi `backup → zrodlo`. `zrodlo.new` (jeśli pozostał) → `failed-<TS>` |
+| SIGKILL / out-of-memory między mv-A i mv-B | trap nie odpali (proces zabity); ale następne uruchomienie protokołu zobaczy `BACKUP` + brak `zrodlo` i wykona „Awaryjny manualny rollback" (sekcja niżej) |
 
 ### Krok 10: cleanup /tmp
 
-`/tmp/` może być usunięty (to system go i tak czyści, ale dla porządku):
+`/tmp/` może być usunięty (system i tak go czyści, ale dla porządku):
 ```bash
 rm -rf "${TMP}"
 ```
 
-To **jedyne** dozwolone `rm -rf` w tym protokole — bo `/tmp/` jest publicznie ulotne.
+To **jedyne** dozwolone `rm -rf` w tym protokole — `/tmp/` jest publicznie ulotne.
 
-### Krok 9: powiadomienie
+### Krok 11: powiadomienie
 
 Powiedz uczniowi:
 - Zaktualizowano do SHA `${SHA:0:7}` (data commita: ${DATE})

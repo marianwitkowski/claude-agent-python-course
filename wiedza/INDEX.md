@@ -2,6 +2,11 @@
 
 > **Po co ten plik?** Materiały w `wiedza/zrodlo/` są podzielone na 12 **modułów wykładowych** (każdy = duża porcja tekstu). Dla kursu sokratejskiego potrzebujemy **mniejszych jednostek lekcyjnych** (30–60 min). Ten plik mówi: który fragment którego pliku źródłowego odpowiada której lekcji.
 
+> **⚠️ Komendy w lekcjach** są w wersji **macOS/Linux** (`python3`, `source .venv/bin/activate`). Na Windows zamień:
+> - `python3` → `py`
+> - `source .venv/bin/activate` → `.venv\Scripts\Activate.ps1`
+> Agent automatycznie tłumaczy komendy w trakcie sesji — to ostrzeżenie dotyczy ręcznego czytania.
+
 > **Jak agent z tego korzysta:**
 > 1. Przy generowaniu programu (`program-kursu`) — bierze listę lekcji stąd
 > 2. Przy prowadzeniu lekcji (`lekcja`) — **najpierw** sprawdza gotowy plik `wiedza/lekcje/NN.MM-*.md` (39 gotowych lekcji sokratejskich), **potem** sięga do `zrodlo/` + `AKTUALIZACJE.md`

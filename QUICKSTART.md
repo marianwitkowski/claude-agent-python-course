@@ -2,6 +2,13 @@
 
 Krótki przewodnik dla osoby zaczynającej naukę Pythona z tym kursem.
 
+> **⚠️ Użytkownicy Windows:** Wszystkie komendy w lekcjach i tym dokumencie są pisane w wersji **macOS/Linux**. Na Windows zamień:
+> - `python3` → `py`
+> - `source .venv/bin/activate` → `.venv\Scripts\Activate.ps1`
+> - `which python3` → `Get-Command python`
+>
+> Agent automatycznie tłumaczy komendy podczas sesji (jeśli w onboardingu zaznaczyłeś Windows). Ta uwaga dotyczy **ręcznego** czytania dokumentów.
+
 ---
 
 ## 🚀 Pierwsze uruchomienie
