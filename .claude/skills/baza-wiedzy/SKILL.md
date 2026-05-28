@@ -139,32 +139,28 @@ Pokaż również:
 
 Inna odpowiedź → STOP, `rm -rf ${TMP}`, koniec.
 
-### Krok 7: backup obecnej `zrodlo/`
+### Krok 7: zbuduj `wiedza/zrodlo.new/` (równolegle do obecnego)
+
+**Kluczowe:** nie modyfikujemy `wiedza/zrodlo/` dopóki nowa wersja nie jest gotowa i zwalidowana. Wszystko buduje się obok.
 
 ```bash
 TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
-BACKUP="wiedza/zrodlo.backup-${TIMESTAMP}"
-[ -d wiedza/zrodlo ] && cp -r wiedza/zrodlo "$BACKUP"
-echo "Backup: $BACKUP"
+NEW_DIR="wiedza/zrodlo.new"
+
+# Jeśli zrodlo.new już istnieje (z poprzedniej nieudanej próby) — przenieś, NIE usuwaj
+if [ -d "$NEW_DIR" ]; then
+  mv "$NEW_DIR" "${NEW_DIR}.failed-${TIMESTAMP}"
+  echo "INFO: stary zrodlo.new przeniesiony do ${NEW_DIR}.failed-${TIMESTAMP}"
+fi
+
+mkdir -p "$NEW_DIR"
+cp "${TMP}"/*.md "$NEW_DIR"/
 ```
 
-### Krok 8: atomowy swap (z możliwością rollback)
+### Krok 8: zapisz VERSION.json + walidacja `zrodlo.new/`
 
 ```bash
-set -e
-ROLLBACK() {
-  echo "BŁĄD — przywracam stan poprzedni"
-  rm -rf wiedza/zrodlo
-  mv "$BACKUP" wiedza/zrodlo
-  exit 1
-}
-trap ROLLBACK ERR
-
-# Skopiuj wszystkie pliki z /tmp do zrodlo/
-mkdir -p wiedza/zrodlo
-cp "${TMP}"/*.md wiedza/zrodlo/
-
-# Zapisz VERSION.json
+# Zapisz VERSION.json w nowym katalogu
 python3 -c "
 import json
 from datetime import datetime, timezone
@@ -175,15 +171,66 @@ data = {
     'plikow': 13,
     'zrodlo': 'https://github.com/marianwitkowski/python-kurs-podstawowy'
 }
-with open('wiedza/zrodlo/VERSION.json', 'w', encoding='utf-8') as f:
+with open('${NEW_DIR}/VERSION.json', 'w', encoding='utf-8') as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
 "
 
-trap - ERR
-echo "OK: zaktualizowano do ${SHA:0:7}"
-echo "Backup: ${BACKUP}"
-echo "Wyczyść backup gdy upewnisz się że nowa wersja działa: rm -rf ${BACKUP}"
+# Walidacja nowego katalogu PRZED swapem
+FILES_COUNT=$(ls "$NEW_DIR"/*.md 2>/dev/null | wc -l)
+if [ "$FILES_COUNT" -ne 13 ]; then
+  echo "BŁĄD: oczekiwane 13 plików .md, znalezione: $FILES_COUNT"
+  mv "$NEW_DIR" "${NEW_DIR}.failed-${TIMESTAMP}"
+  echo "Nieudana wersja: ${NEW_DIR}.failed-${TIMESTAMP} (NIE USUNIĘTA — sprawdź ręcznie)"
+  exit 1
+fi
+
+python3 -c "import json; json.load(open('${NEW_DIR}/VERSION.json'))" || {
+  echo "BŁĄD: VERSION.json nie parsuje się jako JSON"
+  mv "$NEW_DIR" "${NEW_DIR}.failed-${TIMESTAMP}"
+  exit 1
+}
 ```
+
+### Krok 9: atomowy swap przez `mv` (bez `rm -rf`)
+
+To gwarantuje, że jeśli zdalne repo **USUNĘŁO** plik, lokalny mirror też go straci (poprawny mirror). Stary katalog idzie do backupu jako CAŁOŚĆ — nie kasujemy poszczególnych plików.
+
+```bash
+BACKUP="wiedza/zrodlo.backup-${TIMESTAMP}"
+
+# Atomowy swap przez 2x mv (każdy mv jest atomowy w POSIX):
+# Krok A: stary zrodlo → backup
+if [ -d wiedza/zrodlo ]; then
+  mv wiedza/zrodlo "$BACKUP"
+fi
+
+# Krok B: nowy zrodlo.new → zrodlo
+mv "$NEW_DIR" wiedza/zrodlo
+
+echo "OK: zaktualizowano do ${SHA:0:7}"
+echo "Backup poprzedniej wersji: ${BACKUP}"
+echo "(Backup zostaje. Aby zarchiwizować po sprawdzeniu: mv ${BACKUP} wiedza/_old/)"
+```
+
+**Awaryjny rollback** (jeśli między Krokiem A i B coś padnie):
+```bash
+# Gdy backup istnieje, ale zrodlo nie:
+if [ ! -d wiedza/zrodlo ] && [ -d "$BACKUP" ]; then
+  mv "$BACKUP" wiedza/zrodlo
+  echo "ROLLBACK: przywrócono z backupu"
+fi
+```
+
+Agent powinien wykonać tę kontrolę zaraz po Kroku 9.
+
+### Krok 10: cleanup /tmp
+
+`/tmp/` może być usunięty (to system go i tak czyści, ale dla porządku):
+```bash
+rm -rf "${TMP}"
+```
+
+To **jedyne** dozwolone `rm -rf` w tym protokole — bo `/tmp/` jest publicznie ulotne.
 
 ### Krok 9: powiadomienie
 
@@ -193,13 +240,16 @@ Powiedz uczniowi:
 - Wyczyszczono `/tmp/...`
 - Przypomnienie: "Jeśli widoczne były zmiany merytoryczne, warto przejrzeć `wiedza/AKTUALIZACJE.md` (czy nasze delty nadal trafne) i ewentualnie zaktualizować notatki w `wiedza/lekcje/`."
 
-### Awaryjne — manualny rollback
+### Awaryjne — manualny rollback (bez `rm -rf`)
 
 Jeśli po aktualizacji okaże się, że coś nie działa:
 
 ```bash
-rm -rf wiedza/zrodlo
-mv wiedza/zrodlo.backup-${TIMESTAMP} wiedza/zrodlo
+TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+# Przenieś obecną (nieudaną) wersję do failed/, NIE kasuj:
+mv wiedza/zrodlo "wiedza/zrodlo.failed-${TIMESTAMP}"
+# Przywróć backup:
+mv wiedza/zrodlo.backup-<TIMESTAMP_BACKUPU> wiedza/zrodlo
 ```
 
 Lub komenda dla agenta: `przywróć poprzednią wersję bazy wiedzy` → użyje najnowszego `zrodlo.backup-*`.
@@ -237,13 +287,16 @@ To "dry-run" — tylko informacja, nic nie modyfikuje.
 Gdy uczeń mówi "przywróć poprzednią bazę wiedzy" / "rollback bazy":
 
 1. Wylistuj backupy: `ls -dt wiedza/zrodlo.backup-*`
-2. Pokaż uczniowi listę z datami
-3. Po wyborze (lub jeśli jest tylko jeden, automatycznie):
+2. Pokaż uczniowi listę z datami + SHA (z każdego `VERSION.json` w backupie, jeśli jest)
+3. Po wyborze:
    ```bash
-   rm -rf wiedza/zrodlo
-   mv wiedza/zrodlo.backup-${WYBRANY} wiedza/zrodlo
+   TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+   # Obecną wersję przenieś do failed/, NIE kasuj:
+   mv wiedza/zrodlo "wiedza/zrodlo.failed-${TIMESTAMP}"
+   # Przywróć wybrany backup:
+   mv "wiedza/zrodlo.backup-${WYBRANY}" wiedza/zrodlo
    ```
-4. Potwierdź: "Przywrócono z `${WYBRANY}`. SHA: <z VERSION.json>"
+4. Potwierdź: "Przywrócono z `zrodlo.backup-${WYBRANY}` (SHA: <z VERSION.json>). Poprzednia wersja zachowana w `zrodlo.failed-${TIMESTAMP}/` (możesz usunąć ręcznie po sprawdzeniu)."
 
 ## 4. Pokaż konkretny plik źródłowy
 
@@ -286,9 +339,12 @@ Gdy agent (np. skill `lekcja`) potrzebuje treści dla danego konceptu:
 - **Pobieranie tylko z konkretnego SHA**, nie z `main` — gwarancja spójności snapshotu.
 - **Pobieranie ZAWSZE najpierw do `/tmp/`** i walidacja przed dotknięciem `wiedza/zrodlo/`.
 - **Walidacja każdego pliku:** rozmiar >500B, nie HTML, zaczyna się od `#` lub `---`.
-- **Backup przed nadpisaniem** — `wiedza/zrodlo.backup-${TIMESTAMP}/`. Backup ZAWSZE, niezależnie od wielkości zmian.
-- **Rollback automatyczny** przy błędzie w trakcie kopiowania (przez `trap ERR`).
+- **Buduj `wiedza/zrodlo.new/` równolegle**, walidacja, dopiero potem swap. Nigdy nie modyfikuj `zrodlo/` "po fragmencie".
+- **Atomowy swap przez `mv`** — najpierw `zrodlo → zrodlo.backup-<TS>`, potem `zrodlo.new → zrodlo`. Bez `rm -rf` na `wiedza/zrodlo/`.
+- **Mirror właściwy** — przez `zrodlo.new` zachowujemy semantykę mirror'a: jeśli zdalne repo usunęło plik, lokalny też.
+- **Rollback automatyczny** — jeśli swap padnie między mv-A i mv-B, agent przywraca z backupu.
+- **Nieudane operacje archiwizuj** — `*.failed-<TS>/`, NIE `rm -rf`.
 - **`VERSION.json`** trzymany w `wiedza/zrodlo/VERSION.json` z SHA + datami. **Commituj do gita** — pokazuje innym, z jakiego stanu pochodzi baza.
 - **Nie usuwaj `AKTUALIZACJE.md`** przy odświeżeniu — to nasz aneks merytoryczny.
 - **Nie wykrywaj zmian automatycznie** — odświeżenie wymaga jawnej komendy ucznia/autora.
-- **Nie czyść backupów automatycznie** — uczeń sam decyduje, kiedy je usunąć (`rm -rf wiedza/zrodlo.backup-*` po upewnieniu się, że nowa wersja działa).
+- **Nie czyść backupów automatycznie** — uczeń sam decyduje, kiedy je usunąć. Zalecana ścieżka: po sprawdzeniu nowej wersji `mv wiedza/zrodlo.backup-* wiedza/_old/` zamiast `rm -rf`.

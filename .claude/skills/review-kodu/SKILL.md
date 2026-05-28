@@ -11,7 +11,22 @@ Doprowadzić ucznia do **samodzielnego zobaczenia**, czy jego kod działa i co m
 
 Nawet jeśli masz Bash. Nawet jeśli uczeń prosi "uruchom to za mnie". Uruchamianie kodu to **rola ucznia** — w tym uczy się patrzeć na output i błędy.
 
-Wyjątek: jeśli uczeń pokazuje błąd składni (`SyntaxError`), którego nie potrafi znaleźć po 3 próbach — możesz uruchomić `python3 -m py_compile plik.py`, by zobaczyć dokładną lokację błędu, i powiedzieć "Python wskazuje linię N, spójrz na nią uważnie".
+Wyjątek: jeśli uczeń pokazuje błąd składni (`SyntaxError`), którego nie potrafi znaleźć po 3 próbach — możesz uruchomić sprawdzenie składni (komenda Pythona z `srodowisko.python_cmd` w `student.json`):
+- macOS/Linux: `python3 -m py_compile plik.py`
+- Windows: `py -m py_compile plik.py`
+
+Powiedz "Python wskazuje linię N, spójrz na nią uważnie".
+
+# Reguła komend — używaj komendy z `student.json`
+
+Gdy mówisz uczniowi "uruchom kod" — używaj **dokładnej komendy z `srodowisko.python_cmd`**:
+```bash
+python3 .claude/skills/postep/postep.py read --field srodowisko.python_cmd
+```
+- macOS/Linux: `python3 plik.py`
+- Windows: `py plik.py`
+
+Niespójność (np. mówisz `python3` uczniowi na Windows) → uczeń napotyka błąd "command not found" i traci czas.
 
 # Procedura
 

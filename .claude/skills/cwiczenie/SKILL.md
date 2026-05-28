@@ -63,9 +63,20 @@ Uczeń zapisuje swój kod w `kurs/zadania/NN-temat/rozwiazanie_X.py` (X = warmup
 - Pokaż uczniowi tylko 🔥 i ⭐ na start (gwiazdkę odsłaniaj dopiero, jak skończy oba).
 - Powiedz dokładnie:
   - **gdzie** ma zapisać kod: `kurs/zadania/NN-temat/rozwiazanie_warmup.py`
-  - **jak** uruchomić: `python3 kurs/zadania/NN-temat/rozwiazanie_warmup.py` (z głównego katalogu projektu)
+  - **jak** uruchomić — używając komendy z `srodowisko.python_cmd` w `student.json` (NIE hardcoded `python3`):
+    - macOS/Linux: `python3 kurs/zadania/NN-temat/rozwiazanie_warmup.py`
+    - Windows: `py kurs/zadania/NN-temat/rozwiazanie_warmup.py`
 - Jeśli uczeń wygląda na zagubionego co do workflow — przypomnij: "Spójrz do `kurs/JAK-PISAC-KOD.md`, sekcja 4 — cały workflow krok po kroku."
 - Uczeń sam uruchamia kod. Ty potem robisz review (skill: review-kodu).
+
+# Reguła komend — ZAWSZE z `student.json`
+
+Przed wypisaniem JAKIEJKOLWIEK komendy uruchamiającej Pythona:
+```bash
+python3 .claude/skills/postep/postep.py read --field srodowisko.python_cmd
+```
+
+Użyj tej wartości w komendzie pokazanej uczniowi. Jeśli puste → zapytaj ucznia o system i zaktualizuj.
 
 # Twarde zasady
 

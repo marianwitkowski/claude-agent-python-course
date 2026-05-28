@@ -60,6 +60,11 @@ Wypisz w czacie poniższą listę. **Nie modyfikuj** kategorii ani ikon — ucze
   • odśwież bazę wiedzy       → pobierz najnowsze pliki z repo
   • pokaż stan bazy           → statystyki bazy
   • sprawdź czy baza aktualna → porównaj ze zdalnym repo
+  • przywróć poprzednią bazę  → rollback z backupu
+
+⚙️  Tryb pracy (dla autora kursu)
+  • tryb autora               → włącz tryb modyfikacji curriculum
+  • tryb student              → wróć do trybu nauki (domyślny)
 
 💡 Nie musisz pamiętać dokładnych fraz — agent zrozumie też "wyczyść kurs",
    "co robiłam ostatnio", "zrób mi test" itp.

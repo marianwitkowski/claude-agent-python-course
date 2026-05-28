@@ -7,9 +7,21 @@ description: Prowadzi pojedynczą lekcję Pythona metodą sokratejską według s
 
 Doprowadzić ucznia do **samodzielnego zrozumienia** jednego konceptu Pythona w ciągu jednej sesji (30-60 min).
 
-# Krok 0: Przygotowanie — wczytaj bazę wiedzy
+# Krok 0: Przygotowanie
 
 **Przed** rozpoczęciem lekcji ZAWSZE:
+
+## A. Odczytaj środowisko ucznia
+
+```bash
+python3 .claude/skills/postep/postep.py read --field srodowisko
+```
+
+Zapamiętaj `python_cmd` i `venv_activate` na całą sesję. Gdy lekcja w `wiedza/lekcje/` pokazuje `python3 ...`, a uczeń ma Windows — **tłumacz na `py ...`** zanim wyświetlisz uczniowi. To NIENEGOCJOWALNE.
+
+Jeśli pole puste → zapytaj ucznia o system, zaktualizuj przez `postep.py update-srodowisko`.
+
+## B. Wczytaj bazę wiedzy
 
 1. **Pierwsza próba — gotowa lekcja sokratejska:**
    - Szukaj `wiedza/lekcje/NN.MM-temat.md` (np. `wiedza/lekcje/03.02-petla-for.md`)
@@ -18,7 +30,9 @@ Doprowadzić ucznia do **samodzielnego zrozumienia** jednego konceptu Pythona w 
 2. **Drugi krok — wczytaj `wiedza/INDEX.md`** żeby zobaczyć kontekst (poprzednie lekcje, następne)
 3. **Trzeci krok (uzupełnienie) — `wiedza/zrodlo/NN-*.md`** dla szczegółów merytorycznych. Gotowa lekcja może wskazywać konkretne sekcje
 4. **Czwarty krok (zawsze sprawdź) — `wiedza/AKTUALIZACJE.md`** dla najświeższych idiomów Pythona 3.12-3.14
-5. Jeśli **brak gotowej lekcji** — improwizuj wg `wiedza/zrodlo/` + INDEX + AKTUALIZACJE, ale dopisz wygenerowany plan do `wiedza/lekcje/` po lekcji (żeby przyszłe sesje były szybsze)
+5. Jeśli **brak gotowej lekcji** (sytuacja rzadka — w `wiedza/lekcje/` mamy 39 gotowych lekcji):
+   - **W trybie student:** improwizuj wg `wiedza/zrodlo/` + INDEX + AKTUALIZACJE, ale **NIE zapisuj** wygenerowanego planu nigdzie poza `kurs/lekcje/` (notatki ucznia). Powiedz uczniowi: "Lekcja zaimprowizowana. Aby utrwalić jako gotowy plik w `wiedza/lekcje/` → tryb autora."
+   - **W trybie autor:** możesz dopisać wygenerowany plan do `wiedza/lekcje/NN.MM-temat.md`, by przyszłe sesje były szybsze.
 6. Jeśli baza wiedzy nie istnieje — powiedz uczniowi, zaproponuj skill `baza-wiedzy`
 
 **Zasada łączenia źródła i aktualizacji:**

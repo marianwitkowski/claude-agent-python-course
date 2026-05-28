@@ -209,10 +209,35 @@ Nie idź dalej, dopóki uczeń nie potwierdzi.
 - **`python3` na Windows** — często nie istnieje. Używaj `py` lub `python`.
 - **Po instalacji ZAWSZE nowy terminal** — to oszczędzi długich poszukiwań "czemu nie działa".
 
+# Zapis środowiska do `student.json`
+
+Po zakończonym setupie ZAWSZE zapisz środowisko (po onboardingu może być od razu w `init`, w trakcie kursu przez `update-srodowisko`):
+
+```bash
+# Jeśli student.json istnieje (np. setup uruchomiony powtórnie):
+python3 .claude/skills/postep/postep.py update-srodowisko \
+  --system "macOS" \
+  --python-cmd "python3" \
+  --venv-activate "source .venv/bin/activate" \
+  --shell "zsh" \
+  --edytor "VS Code"
+```
+
+**Mapowanie systemu → komendy:**
+
+| System  | `python_cmd` | `venv_activate`                       | `shell`        |
+| ------- | ------------ | ------------------------------------- | -------------- |
+| macOS   | `python3`    | `source .venv/bin/activate`           | `zsh`/`bash`   |
+| Linux   | `python3`    | `source .venv/bin/activate`           | `bash`/`zsh`   |
+| Windows | `py`         | `.venv\Scripts\Activate.ps1`          | `PowerShell`   |
+| WSL     | `python3`    | `source .venv/bin/activate`           | `bash`         |
+
+Zapis przez `postep.py` jest atomowy — nie ma ryzyka uszkodzenia `student.json`.
+
 # Zwrotka do agenta-rodzica
 
 Po zakończeniu zwróć krótko:
-- `OK: Python 3.X.Y na <system>, komenda: <python3|py>, edytor: <nazwa>`
+- `OK: Python 3.X.Y na <system>, komenda: <python3|py>, edytor: <nazwa> — środowisko zapisane`
 - lub `BLOCKED: <co nie działa>`
 
-System zapamiętaj w `notatkach_tutora` w `student.json` — przyda się w późniejszych lekcjach (zwłaszcza 9.2 venv).
+**Od tego momentu** WSZYSTKIE skille edukacyjne (lekcja, cwiczenie, review-kodu) muszą używać `srodowisko.python_cmd` z `student.json`, nie hardcoded `python3`.
