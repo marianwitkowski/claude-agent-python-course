@@ -44,7 +44,7 @@ Jeśli chcesz coś przetestować "na brudno", utwórz plik `notatnik.py` w katal
 
 1. Pobierz z https://code.visualstudio.com/
 2. Zainstaluj rozszerzenie **Python** od Microsoftu (Extensions → wyszukaj "Python")
-3. Otwórz cały katalog kursu: `File → Open Folder → ITMOBILE-kurs-python`
+3. Otwórz cały katalog kursu: `File → Open Folder → kurs-python`
 4. Pliki `.py` będą miały kolorowanie składni i podpowiedzi
 
 ### Inne opcje
@@ -87,7 +87,7 @@ Agent dopasuje komendy do Twojego systemu — daj mu znać na początku, jakiego
 #### 1. Przejdź do katalogu z kodem
 
 ```bash
-cd ~/Desktop/Projekty/ITMOBILE-kurs-python
+cd ~/kurs-python
 ```
 
 `cd` = "change directory" (zmień katalog).

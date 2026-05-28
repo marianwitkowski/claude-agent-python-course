@@ -112,7 +112,7 @@ Po prostu napisz `ucz mnie Pythona` albo `kontynuujemy`:
 ## 📂 Co jest gdzie
 
 ```
-ITMOBILE-kurs-python/
+kurs-python/
 │
 ├── .claude/                      ← agent + skille (NIE dotykaj)
 ├── wiedza/                       ← baza wiedzy (39 lekcji gotowych)
