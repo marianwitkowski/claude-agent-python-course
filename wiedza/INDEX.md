@@ -134,5 +134,5 @@
    - **hobby/gra** → moduł 11 projekt jako gra tekstowa, moduł 10 minimal
    - **szkoła** → moduł 11 projekt matematyczny, moduł 10 standardowy
 3. Dostosowuje do **tempa** (modyfikuje gęstość lekcji na tydzień)
-4. Generuje `kurs/program.md` z tabelą 36 lekcji + datami orientacyjnymi
+4. Generuje `kurs/program.md` z tabelą 39 lekcji + datami orientacyjnymi
 5. Można potem edytować — to plan, nie kontrakt

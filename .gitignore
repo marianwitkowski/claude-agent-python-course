@@ -2,6 +2,9 @@
 # Dane ucznia (NIGDY nie commituj — to prywatne)
 # =============================================================================
 postep/student.json
+postep/student.broken.*.json
+postep/student.json.tmp
+postep/backups/
 postep/archiwum/
 kurs/program.md
 kurs/lekcje/
@@ -9,6 +12,7 @@ kurs/zadania/
 
 # Backupy bazy wiedzy (lokalne, tworzone przez skill baza-wiedzy)
 wiedza/zrodlo.backup-*/
+# Stan bazy wiedzy commitujemy (VERSION.json) — pokazuje z jakiego SHA pochodzi obecna kopia
 
 # =============================================================================
 # Python — bytecode i cache

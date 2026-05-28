@@ -1,6 +1,6 @@
 ---
 name: program-kursu
-description: Generuje plik kurs/program.md — spersonalizowany program 12 modułów / ~36 lekcji podstaw Pythona, na podstawie bazy wiedzy w `wiedza/INDEX.md`. Dostosowuje do celu ucznia (praca/hobby/dane/szkoła) i deklarowanego tempa. Użyj raz, podczas onboardingu, po krótkim wywiadzie z uczniem.
+description: Generuje plik kurs/program.md — spersonalizowany program 12 modułów / 39 lekcji podstaw Pythona, na podstawie bazy wiedzy w `wiedza/INDEX.md`. Dostosowuje do celu ucznia (praca/hobby/dane/szkoła) i deklarowanego tempa. Użyj raz, podczas onboardingu, po krótkim wywiadzie z uczniem.
 ---
 
 # Cel
@@ -9,7 +9,7 @@ Stworzyć `kurs/program.md` — plan kursu, do którego uczeń i tutor będą wr
 
 # Źródło prawdy
 
-**Zawsze** opieraj plan na pliku `wiedza/INDEX.md`. Nie wymyślaj modułów ani lekcji — tabela z INDEX.md to kanon (12 modułów, ~36 lekcji, oparte na repo `marianwitkowski/python-kurs-podstawowy`).
+**Zawsze** opieraj plan na pliku `wiedza/INDEX.md`. Nie wymyślaj modułów ani lekcji — tabela z INDEX.md to kanon (12 modułów, **39 lekcji**, oparte na repo `marianwitkowski/python-kurs-podstawowy`).
 
 Jeśli `wiedza/INDEX.md` nie istnieje → coś jest nie tak z bazą wiedzy. Powiedz uczniowi i zaproponuj uruchomienie skill `baza-wiedzy` (pobranie z repo).
 
@@ -23,7 +23,7 @@ Wymagane od ucznia (przed wywołaniem skill):
 # Procedura
 
 1. **Wczytaj** `wiedza/INDEX.md` — to źródło struktury kursu
-2. **Skopiuj** kanon (12 modułów × ~3 lekcje = 36 lekcji)
+2. **Skopiuj** kanon (12 modułów, 39 lekcji — niektóre moduły 3, niektóre 4)
 3. **Personalizuj** wg celu (patrz niżej)
 4. **Dostosuj tempo** wg dostępnego czasu
 5. **Zapisz** do `kurs/program.md`

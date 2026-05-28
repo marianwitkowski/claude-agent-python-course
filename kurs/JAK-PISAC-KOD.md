@@ -65,7 +65,22 @@ Jeśli chcesz coś przetestować "na brudno", utwórz plik `notatnik.py` w katal
 
 ### Co to terminal?
 
-To okienko, w którym wpisujesz **komendy tekstowe** zamiast klikać. Na macOS otwórz aplikację **Terminal** (Cmd+Space → wpisz "Terminal" → Enter).
+To okienko, w którym wpisujesz **komendy tekstowe** zamiast klikać.
+
+| System    | Jak otworzyć terminal                                          | Komenda Pythona |
+| --------- | -------------------------------------------------------------- | --------------- |
+| **macOS** | Cmd+Space → "Terminal" → Enter                                 | `python3`       |
+| **Linux**| Ctrl+Alt+T (większość dystrybucji)                              | `python3`       |
+| **Windows** | Win+X → "Windows PowerShell" (lub "Terminal" na Win11)       | `py` lub `python` |
+
+**⚠️ Ważne dla Windows:** w tej instrukcji wszędzie tam, gdzie widzisz `python3 plik.py`, **u Ciebie ma być `py plik.py`** (lub `python plik.py`). Komenda `python3` na Windows zwykle nie istnieje.
+
+**⚠️ Ważne dla aktywacji venv (lekcja 9.2):**
+- macOS/Linux: `source .venv/bin/activate`
+- Windows PowerShell: `.venv\Scripts\Activate.ps1`
+- Windows cmd: `.venv\Scripts\activate.bat`
+
+Agent dopasuje komendy do Twojego systemu — daj mu znać na początku, jakiego używasz.
 
 ### Krok po kroku — uruchomienie pliku
 

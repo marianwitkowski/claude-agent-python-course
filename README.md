@@ -162,6 +162,9 @@ Komendy wpisujesz w Claude Code — to są **frazy w języku naturalnym**, nie f
 
 ## Wymagania
 
-- macOS / Linux / Windows (instrukcje setup w skill `setup-python`)
-- Claude Code (https://claude.com/code)
-- Edytor tekstu (rekomendacja: VS Code z rozszerzeniem Python)
+- **System operacyjny:** macOS, Linux lub Windows (PowerShell / cmd / WSL) — skill `setup-python` ma dedykowane gałęzie dla każdego
+- **Python 3.10+** (rekomendowany 3.12 lub 3.13; sprawdzenie i instalacja przez skill `setup-python`)
+- **Claude Code** (https://claude.com/code)
+- **Edytor tekstu** — rekomendacja: VS Code + rozszerzenie Python (działa identycznie na każdym OS)
+
+> 💡 **Notatka o komendach:** w lekcjach komendy są w wersji macOS/Linux (`python3`, `source .venv/bin/activate`). Na Windows używaj `py` (zamiast `python3`) i `.venv\Scripts\Activate.ps1` (zamiast `source ...`). Pełna mapa różnic w `kurs/JAK-PISAC-KOD.md` (sekcja 3) i skill `setup-python`.
