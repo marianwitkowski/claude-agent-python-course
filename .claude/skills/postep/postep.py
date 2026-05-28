@@ -171,12 +171,17 @@ def cmd_init(args):
     state["tempo_godz_tydz"] = args.tempo
     state["rozpoczeto"] = today()
     state["ostatnia_sesja"] = today()
+    # Pełen snapshot środowiska od razu (nie wymaga osobnego update-srodowisko)
     if args.system:
         state["srodowisko"]["system"] = args.system
     if args.python_cmd:
         state["srodowisko"]["python_cmd"] = args.python_cmd
     if args.venv_activate:
         state["srodowisko"]["venv_activate"] = args.venv_activate
+    if args.shell:
+        state["srodowisko"]["shell"] = args.shell
+    if args.edytor:
+        state["srodowisko"]["edytor"] = args.edytor
     # init: nie ma czego backupować, ale i tak atomowy write
     write_atomic(state)
     print(f"OK: utworzono {STUDENT.relative_to(ROOT)} (schema v{SCHEMA_VERSION})")
@@ -359,7 +364,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--tempo", required=True, help="np. '<2', '2-5', '5-10', '10+'")
     p.add_argument("--system", help="macOS | Linux | Windows")
     p.add_argument("--python-cmd", dest="python_cmd", help="np. python3 lub py")
-    p.add_argument("--venv-activate", dest="venv_activate")
+    p.add_argument("--venv-activate", dest="venv_activate", help="komenda aktywacji venv")
+    p.add_argument("--shell", help="np. zsh, bash, PowerShell")
+    p.add_argument("--edytor", help="np. VS Code, PyCharm, Sublime")
 
     p = sub.add_parser("read", help="Pokaż stan (cały lub jedno pole)")
     p.add_argument("--field", help="ścieżka kropkowa, np. srodowisko.system")

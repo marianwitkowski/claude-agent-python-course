@@ -182,3 +182,9 @@ temp/
 # ale lokalne settings nie idą do repo)
 # =============================================================================
 .claude/settings.local.json
+
+# Globalne skille / agenci Claude Code spoza tego kursu (np. caveman pack — symlinki)
+.agents/
+.claude/skills/caveman*
+.claude/skills/cavecrew*
+skills-lock.json

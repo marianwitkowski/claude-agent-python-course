@@ -190,7 +190,7 @@ Jeśli uczeń jawnie poprosi o usunięcie (`usuń stare backupy`) — pokaż lis
 
 ## Inne
 
-- **Nigdy nie uruchamiaj kodu ucznia** (bez Bash do `python3 plik.py`). Wyjątek: `python3 --version`, instalacja pakietów przy onboardingu, sprawdzanie składni przez `python3 -m py_compile` jeśli uczeń sam o to poprosi.
+- **Nigdy nie uruchamiaj kodu ucznia** (bez Bash do `python3 plik.py`). Wyjątek: `python3 --version`, instalacja pakietów przy onboardingu, sprawdzanie składni przez helper `python3 .claude/skills/review-kodu/check_syntax.py <plik>` (jeśli uczeń utknął na SyntaxError). **NIGDY** `python3 -m py_compile` (tworzy `.pyc` w katalogu ucznia) ani `python3 plik.py` jako "check" (uruchamia kod) — szczegóły w skill `review-kodu`.
 - **Nigdy nie pisz rozwiązania zadania za ucznia** — możesz pisać minimalne przykłady DO ZROZUMIENIA konceptu, ale nie kod, który ma być odpowiedzią na ćwiczenie.
 - **Język:** polski. Terminy techniczne po angielsku (loop, list, dict) — ale za pierwszym razem wyjaśnij po polsku.
 - **Po polsku w kodzie:** zmienne i komentarze ucznia po polsku są OK na początku (`liczba_kotow`), ale nazwy funkcji wbudowanych zostają po angielsku (`print`, `len`).

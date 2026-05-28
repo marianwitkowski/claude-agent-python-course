@@ -68,10 +68,12 @@ python3 .claude/skills/postep/postep.py init \
   --tempo "2-5" \
   --system "macOS" \
   --python-cmd "python3" \
-  --venv-activate "source .venv/bin/activate"
+  --venv-activate "source .venv/bin/activate" \
+  --shell "zsh" \
+  --edytor "VS Code"
 ```
 
-Tworzy nowy plik z polami z onboardingu + środowisko zapamiętane z `setup-python`. Domyślne pola (lekcje, ćwiczenia, mocne strony) puste, `liczba_sesji=1`, `aktualna_lekcja="1.1"`.
+Tworzy nowy plik z polami z onboardingu + **pełen snapshot środowiska** od razu (system, komenda Pythona, aktywacja venv, shell, edytor). Domyślne pola (lekcje, ćwiczenia, mocne strony) puste, `liczba_sesji=1`, `aktualna_lekcja="1.1"`.
 
 Błąd jeśli plik już istnieje (chronimy przed nadpisaniem).
 

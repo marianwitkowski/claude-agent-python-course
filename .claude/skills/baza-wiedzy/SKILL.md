@@ -29,6 +29,124 @@ wiedza/
 
 # Operacje
 
+## 0. Krok wstępny — weryfikacja spójności (każda komenda)
+
+**ZAWSZE** na początku **dowolnej** komendy bazy wiedzy (`refresh`, `check`, `status`, `rollback`, podgląd plików) wywołaj funkcję `verify_state`. Wykrywa ślady przerwanych aktualizacji (SIGKILL, padło zasilanie, agent zatrzymany w połowie).
+
+```bash
+verify_state() {
+  # Sygnał 1: brak wiedza/zrodlo + istnieje wiedza/zrodlo.backup-*
+  # → poprzednia aktualizacja padła między mv-A (zrodlo → backup) i mv-B (zrodlo.new → zrodlo)
+  if [ ! -d wiedza/zrodlo ]; then
+    NEWEST_BACKUP=$(ls -dt wiedza/zrodlo.backup-* 2>/dev/null | head -1)
+    if [ -n "$NEWEST_BACKUP" ]; then
+      echo "SIGNAL_1:$NEWEST_BACKUP"
+      return 1
+    fi
+  fi
+
+  # Sygnał 2: istnieje wiedza/zrodlo.new (pozostały po nieudanym buildzie)
+  if [ -d wiedza/zrodlo.new ]; then
+    echo "SIGNAL_2:wiedza/zrodlo.new"
+    return 2
+  fi
+
+  # Sygnał 3: VERSION.json brak (baza z czasu sprzed wersjonowania — info, nie błąd)
+  if [ -d wiedza/zrodlo ] && [ ! -f wiedza/zrodlo/VERSION.json ]; then
+    echo "SIGNAL_3:no_version"
+    return 3
+  fi
+
+  return 0
+}
+
+VERIFY_CODE=0
+verify_state || VERIFY_CODE=$?
+```
+
+### Kanoniczny wzorzec wywołania
+
+**ZAWSZE** używaj `VERIFY_CODE=0; verify_state || VERIFY_CODE=$?` — niezależnie od kontekstu (pod `set -e` czy bez). Spójność i bezpieczeństwo. Nigdy `verify_state; VERIFY_CODE=$?` (pod `set -e` shell aborterę zanim agent odczyta kod).
+
+Pełne użycie:
+
+```bash
+set -e
+# ...inne komendy...
+
+VERIFY_CODE=0
+verify_state || VERIFY_CODE=$?    # `||` chroni przed set -e abort
+
+case $VERIFY_CODE in
+  1) # Sygnał 1: brak zrodlo + jest backup → zapytaj ucznia
+     echo "Wykryto przerwaną aktualizację, pytam ucznia..."
+     # ...handler kodu 1...
+     ;;
+  2) # Sygnał 2: zostawiony zrodlo.new → handle
+     # ...handler kodu 2...
+     ;;
+  3) # Sygnał 3: brak VERSION.json → informuj, kontynuuj
+     echo "ℹ️  Brak VERSION.json — kontynuuję bez wersjonowania"
+     ;;
+  0) ;;  # zdrowy stan, kontynuuj
+esac
+```
+
+**Anty-wzorzec (NIGDY):**
+```bash
+verify_state              # pod set -e abort przy return 1/2/3
+VERIFY_CODE=$?            # tu nie dojdzie
+```
+
+### Reakcja agenta na każdy sygnał
+
+**Sygnał 1 (kod 1):** `wiedza/zrodlo/` zniknął, jest najnowszy backup → wysokie prawdopodobieństwo przerwanej aktualizacji.
+
+Agent **zatrzymuje wszystkie inne operacje** i pyta ucznia:
+
+> "⚠️ Wykryłem ślady przerwanej aktualizacji bazy wiedzy:
+> - `wiedza/zrodlo/` nie istnieje
+> - Jest backup: `[NEWEST_BACKUP]` (SHA: [z VERSION.json], data: [...])
+>
+> Prawdopodobnie poprzednia aktualizacja została przerwana (SIGKILL, padło zasilanie, agent się zatrzymał między dwoma mv).
+>
+> Co robimy?
+> - **`przywróć`** → odzyskaj `wiedza/zrodlo/` z backupu (zalecane — bezpieczne, nic nie tracimy)
+> - **`pomiń`** → zostawiam jak jest (nie znajdę materiałów do lekcji — kurs nie ruszy)
+> - **`usuń backup`** → wyrzuć backup (NIE polecane — utrata danych)"
+
+Po `przywróć`:
+```bash
+mv "$NEWEST_BACKUP" wiedza/zrodlo
+echo "OK: przywrócono wiedza/zrodlo z $NEWEST_BACKUP"
+```
+
+**Sygnał 2 (kod 2):** `wiedza/zrodlo.new` pozostał z nieudanego buildu.
+
+Agent informuje i proponuje:
+
+> "ℹ️ Wykryłem `wiedza/zrodlo.new/` z poprzedniej, nieudanej próby aktualizacji. Co robimy?
+> - **`przenieś do failed`** → mv na `wiedza/zrodlo.new.failed-[TS]` (bezpieczne — można przejrzeć)
+> - **`pomiń`** → zostawiam jak jest (kolejna aktualizacja może to nadpisać)"
+
+Po `przenieś do failed`:
+```bash
+TIMESTAMP=$(python3 -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f'))")
+mv wiedza/zrodlo.new "wiedza/zrodlo.new.failed-${TIMESTAMP}"
+```
+
+**Sygnał 3 (kod 3):** Brak `VERSION.json`. Baza pochodzi z pierwszego pobrania (przed wprowadzeniem wersjonowania).
+
+Agent **kontynuuje** żądaną operację, ale dopisuje informacyjnie:
+
+> "ℹ️ Baza nie ma `VERSION.json` (pochodzi sprzed wersjonowania). Zalecane: `odśwież bazę wiedzy`, by wpisać aktualny SHA."
+
+**Kod 0:** Stan spójny — agent kontynuuje bez powiadomień.
+
+### Twarda reguła
+
+**Żadna komenda bazy wiedzy nie wykonuje się bez wcześniejszego `verify_state`.** Jeśli zapomniałeś — uczeń może dostać niespójne wyniki (np. `pokaż stan bazy` zwróci dane z backupu, którego nie zauważyłeś).
+
 ## 1. Odśwież bazę (pobierz najnowszą wersję)
 
 **Protokół 9-krokowy** z walidacją, podglądem diff i rollbackiem. Nigdy nie ruszamy `wiedza/zrodlo/`, dopóki **wszystko** w `/tmp/` nie przejdzie walidacji.
@@ -147,7 +265,7 @@ Wykonaj jako **pojedynczy** `bash -c "..."` lub w jednym wywołaniu shell:
 
 ```bash
 set -e
-TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+TIMESTAMP=$(python3 -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f'))")
 NEW_DIR="wiedza/zrodlo.new"
 BACKUP="wiedza/zrodlo.backup-${TIMESTAMP}"
 
@@ -258,7 +376,7 @@ Powiedz uczniowi:
 Jeśli po aktualizacji okaże się, że coś nie działa:
 
 ```bash
-TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+TIMESTAMP=$(python3 -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f'))")
 # Przenieś obecną (nieudaną) wersję do failed/, NIE kasuj:
 mv wiedza/zrodlo "wiedza/zrodlo.failed-${TIMESTAMP}"
 # Przywróć backup:
@@ -303,7 +421,7 @@ Gdy uczeń mówi "przywróć poprzednią bazę wiedzy" / "rollback bazy":
 2. Pokaż uczniowi listę z datami + SHA (z każdego `VERSION.json` w backupie, jeśli jest)
 3. Po wyborze:
    ```bash
-   TIMESTAMP=$(date +%Y-%m-%d-%H-%M-%S)
+   TIMESTAMP=$(python3 -c "from datetime import datetime; print(datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f'))")
    # Obecną wersję przenieś do failed/, NIE kasuj:
    mv wiedza/zrodlo "wiedza/zrodlo.failed-${TIMESTAMP}"
    # Przywróć wybrany backup:
