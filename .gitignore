@@ -1,0 +1,180 @@
+# =============================================================================
+# Dane ucznia (NIGDY nie commituj — to prywatne)
+# =============================================================================
+postep/student.json
+postep/archiwum/
+kurs/program.md
+kurs/lekcje/
+kurs/zadania/
+
+# Backupy bazy wiedzy (lokalne, tworzone przez skill baza-wiedzy)
+wiedza/zrodlo.backup-*/
+
+# =============================================================================
+# Python — bytecode i cache
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# =============================================================================
+# Wirtualne środowiska
+# =============================================================================
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# uv (nowoczesny package manager)
+.uv-cache/
+
+# =============================================================================
+# Testy i coverage
+# =============================================================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.cache
+
+# =============================================================================
+# Typy i lintery
+# =============================================================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# =============================================================================
+# Jupyter / IPython
+# =============================================================================
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# =============================================================================
+# Edytory i IDE
+# =============================================================================
+# VS Code (zostaw tasks/settings projektowe jeśli chcesz; tu konserwatywnie:)
+.vscode/
+*.code-workspace
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime / Vim / Emacs
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.\#*
+\#*\#
+
+# =============================================================================
+# System operacyjny
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+
+# =============================================================================
+# Sekrety i konfiguracja lokalna (KRYTYCZNE — security!)
+# =============================================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials.json
+config.local.*
+
+# =============================================================================
+# Logi i tymczasowe
+# =============================================================================
+*.log
+logs/
+*.tmp
+*.bak
+*.orig
+tmp/
+temp/
+
+# =============================================================================
+# Bazy danych lokalne (jeśli projekt ucznia ich używa)
+# =============================================================================
+*.sqlite
+*.sqlite3
+*.db
+
+# =============================================================================
+# Claude Code — lokalne ustawienia (zostawiamy katalog agenta/skille,
+# ale lokalne settings nie idą do repo)
+# =============================================================================
+.claude/settings.local.json
