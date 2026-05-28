@@ -96,7 +96,7 @@ Sprawdź, gdzie jesteś:
 ```bash
 pwd
 ```
-Powinno pokazać: `/Users/marian/Desktop/Projekty/ITMOBILE-kurs-python`
+Powinno pokazać: `/Users/emilzatopek/kurs-python`
 
 #### 2. Uruchom plik
 

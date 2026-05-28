@@ -15,7 +15,7 @@ Krótki przewodnik dla osoby zaczynającej naukę Pythona z tym kursem.
 
 ### 1. Sprawdź, gdzie jesteś
 ```bash
-cd /Users/marian/Desktop/Projekty/ITMOBILE-kurs-python
+cd /Users/emilzatopek/kurs-python
 pwd
 ```
 Musisz być **w tym katalogu** — agent i skille są lokalne (`.claude/`).
